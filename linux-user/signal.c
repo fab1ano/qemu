@@ -921,7 +921,12 @@ static void handle_pending_signal(CPUArchState *cpu_env, int sig,
     struct target_sigaction *sa;
     TaskState *ts = cpu->opaque;
 
-    trace_user_handle_signal(cpu_env, sig);
+    target_ulong pc, cs_base;
+    uint32_t flags;
+
+    cpu_get_tb_cpu_state(cpu_env, &pc, &cs_base, &flags);
+
+    trace_user_handle_signal(cpu_env, sig, pc);
     /* dequeue signal */
     k->pending = 0;
 
