@@ -143,6 +143,7 @@ static void init_delay_params(SyncClocks *sc, const CPUState *cpu)
 }
 #endif /* CONFIG USER ONLY */
 
+static bool log_trace;
 /* Execute a TB, and fix up the CPU state afterwards if necessary */
 static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu, TranslationBlock *itb)
 {
@@ -151,13 +152,21 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu, TranslationBlock *itb)
     TranslationBlock *last_tb;
     int tb_exit;
     uint8_t *tb_ptr = itb->tc.ptr;
+    const char *current_symbol;
 
-    qemu_log_mask_and_addr(CPU_LOG_EXEC, itb->pc,
-                           "Trace %d: %p ["
-                           TARGET_FMT_lx "/" TARGET_FMT_lx "/%#x] %s\n",
-                           cpu->cpu_index, itb->tc.ptr,
-                           itb->cs_base, itb->pc, itb->flags,
-                           lookup_symbol(itb->pc));
+    current_symbol = lookup_symbol(itb->pc);
+    if (!strcmp(current_symbol, "main")) {
+        log_trace = true;
+    }
+
+    if (log_trace) {
+        qemu_log_mask_and_addr(CPU_LOG_EXEC, itb->pc,
+                               "Trace %d: %p ["
+                               TARGET_FMT_lx "/" TARGET_FMT_lx "/%#x] %s\n",
+                               cpu->cpu_index, itb->tc.ptr,
+                               itb->cs_base, itb->pc, itb->flags,
+                               current_symbol);
+    }
 
 #if defined(DEBUG_DISAS)
     if (qemu_loglevel_mask(CPU_LOG_TB_CPU)
