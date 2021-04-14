@@ -268,7 +268,7 @@ out:
     g_strfreev(ranges);
 }
 
-static char *filter_pattern;
+static char *filter_pattern = NULL;
 void qemu_set_dfilter_pattern(const char *file_path, Error **errp)
 {
     filter_pattern = strdup(file_path);
