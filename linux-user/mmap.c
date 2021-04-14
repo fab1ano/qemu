@@ -606,6 +606,10 @@ abi_long target_mmap(abi_ulong start, abi_ulong len, int target_prot,
         log_page_dump(__func__);
     }
     tb_invalidate_phys_range(start, start + len);
+
+    // Update dfilter ranges
+    qemu_update_dfilter_regions();
+
     mmap_unlock();
     return start;
 fail:
@@ -711,6 +715,10 @@ int target_munmap(abi_ulong start, abi_ulong len)
         page_set_flags(start, start + len, 0);
         tb_invalidate_phys_range(start, start + len);
     }
+
+    // Update dfilter ranges
+    qemu_update_dfilter_regions();
+
     mmap_unlock();
     return ret;
 }
@@ -792,6 +800,10 @@ abi_long target_mremap(abi_ulong old_addr, abi_ulong old_size,
         page_set_flags(new_addr, new_addr + new_size, prot | PAGE_VALID);
     }
     tb_invalidate_phys_range(new_addr, new_addr + new_size);
+
+    // Update dfilter ranges
+    qemu_update_dfilter_regions();
+
     mmap_unlock();
     return new_addr;
 }

@@ -16,6 +16,8 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  */
+#include <linux/limits.h>
+#include <fnmatch.h>
 
 #include "qemu/osdep.h"
 #include "qemu/log.h"
@@ -266,6 +268,14 @@ out:
     g_strfreev(ranges);
 }
 
+static char *filter_pattern;
+void qemu_set_dfilter_pattern(const char *file_path, Error **errp)
+{
+    filter_pattern = strdup(file_path);
+
+    qemu_update_dfilter_regions();
+}
+
 /* fflush() the log file */
 void qemu_log_flush(void)
 {
@@ -373,6 +383,59 @@ int qemu_str_to_log_mask(const char *str)
  error:
     g_strfreev(parts);
     return 0;
+}
+
+void qemu_update_dfilter_regions(void)
+{
+    if (!filter_pattern) {
+        return;
+    }
+    char buf[PATH_MAX + 200];
+
+    // Read /proc/self/maps
+    FILE *fptr = fopen("/proc/self/maps", "r");
+    if (!fptr) {
+        return;
+    }
+
+    if (debug_regions) {
+        g_array_unref(debug_regions);
+        debug_regions = NULL;
+    }
+
+    debug_regions = g_array_new(FALSE, FALSE, sizeof(Range));
+
+    while (fgets(buf, sizeof(buf), fptr)) {
+        char *filename;
+        char *addr_from_str = strtok(buf, "-");
+        char *addr_to_str = strtok(NULL, " ");
+        if (!addr_from_str || !addr_to_str) {
+            break;
+        }
+
+        for (int i = 0; i<4; i++) {
+            strtok(NULL, " ");
+        }
+
+        filename = strtok(NULL, " \n");
+        if (!filename) {
+            continue;
+        }
+
+        if (!fnmatch(filter_pattern, filename, 0)) {
+            // Events in this entry shall be traced
+            uint64_t lob, upb;
+            struct Range range;
+
+            lob = strtol(addr_from_str, NULL, 16);
+            upb = strtol(addr_to_str, NULL, 16);
+
+            range_set_bounds(&range, lob, upb);
+            g_array_append_val(debug_regions, range);
+        }
+    }
+
+    fclose(fptr);
 }
 
 void qemu_print_log_usage(FILE *f)
