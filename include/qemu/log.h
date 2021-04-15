@@ -157,6 +157,9 @@ int qemu_str_to_log_mask(const char *str);
 
 void qemu_update_dfilter_regions(void);
 
+void qemu_set_trace_start_symbol(const char *symbol, Error **errp);
+const char *qemu_get_trace_start_symbol(void);
+
 /* Print a usage message listing all the valid logging categories
  * to the specified FILE*.
  */

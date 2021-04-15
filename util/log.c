@@ -438,6 +438,18 @@ void qemu_update_dfilter_regions(void)
     fclose(fptr);
 }
 
+static char *trace_start_symbol = NULL;
+
+void qemu_set_trace_start_symbol(const char *symbol, Error **errp)
+{
+    trace_start_symbol = strdup(symbol);
+}
+
+const char *qemu_get_trace_start_symbol(void)
+{
+    return trace_start_symbol;
+}
+
 void qemu_print_log_usage(FILE *f)
 {
     const QEMULogItem *item;

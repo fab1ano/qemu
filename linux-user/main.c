@@ -245,6 +245,11 @@ static void handle_arg_dfilter_pattern(const char *arg)
     qemu_set_dfilter_pattern(arg, &error_fatal);
 }
 
+static void handle_arg_dfilter_trace_start(const char *arg)
+{
+    qemu_set_trace_start_symbol(arg, &error_fatal);
+}
+
 static void handle_arg_log_filename(const char *arg)
 {
     qemu_set_log_filename(arg, &error_fatal);
@@ -453,6 +458,8 @@ static const struct qemu_argument arg_table[] = {
      "range[,...]","filter logging based on address range"},
     {"dfilterpattern","QEMU_DFILTER_PATTERN", true,  handle_arg_dfilter_pattern,
      "pattern",    "filter logging based on mapped file path"},
+    {"dtracestart","QEMU_DTRACE_START", true,  handle_arg_dfilter_trace_start,
+     "symbol",     "start trace log at given symbol"},
     {"D",          "QEMU_LOG_FILENAME", true, handle_arg_log_filename,
      "logfile",     "write logs to 'logfile' (default stderr)"},
     {"p",          "QEMU_PAGESIZE",    true,  handle_arg_pagesize,

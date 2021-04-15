@@ -155,8 +155,15 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu, TranslationBlock *itb)
     const char *current_symbol;
 
     current_symbol = lookup_symbol(itb->pc);
-    if (!strcmp(current_symbol, "main")) {
-        log_trace = true;
+    if (!log_trace) {
+        const char *trace_start_symbol = qemu_get_trace_start_symbol();
+        if (trace_start_symbol) {
+            if (!strcmp(current_symbol, trace_start_symbol)) {
+                log_trace = true;
+            }
+        } else {
+            log_trace = true;
+        }
     }
 
     if (log_trace) {
